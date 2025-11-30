@@ -1,0 +1,8 @@
+[workspace]
+members = ["programs/darkdrop"]
+resolver = "1"
+
+[profile.release]
+overflow-checks = true
+lto = true
+

@@ -1,0 +1,15 @@
+node_modules
+target
+.anchor
+.git
+*.md
+!README.md
+.env
+.env.local
+.next
+dist
+build
+*.log
+.DS_Store
+
+

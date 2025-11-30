@@ -1,0 +1,27 @@
+# Rust
+target/
+**/*.rs.bk
+
+# Anchor
+.anchor/
+test-ledger/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+*.so
+*.dylib
+*.dll
+
+# Logs
+*.log
+
