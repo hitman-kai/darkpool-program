@@ -1,4 +1,4 @@
-# Program Initial Release
+# DarkDrop Program
 
 Solana program for privacy-focused token drops using nullifier-based verification.
 
