@@ -1,5 +1,7 @@
 [workspace]
-members = ["programs/darkdrop"]
+members = [
+  "programs/darkpool",
+]
 resolver = "1"
 
 [profile.release]

@@ -14,7 +14,7 @@ if ($LASTEXITCODE -ne 0) {
 Write-Host "Docker is running" -ForegroundColor Green
 
 # Check if program is built
-if (-not (Test-Path "target/deploy/darkdrop.so")) {
+if (-not (Test-Path "target/deploy/darkpool.so")) {
     Write-Host "`nWarning: Program not built yet. Building first..." -ForegroundColor Yellow
     .\build-with-docker.ps1
     if ($LASTEXITCODE -ne 0) {
@@ -61,7 +61,7 @@ docker run --rm `
     -v "${PWD}:/workspace" `
     -v "${keypairDir}:/keys" `
     -w /workspace `
-    darkdrop-builder `
+    darkpool-builder `
     bash -c "solana config set --url devnet && solana config set --keypair /keys/$keypairFile && anchor deploy --provider.cluster devnet --provider.wallet /keys/$keypairFile"
 
 if ($LASTEXITCODE -eq 0) {

@@ -1,5 +1,5 @@
 {
-  "name": "darkdrop-program",
+  "name": "darkpool-program",
   "version": "1.0.0",
   "description": "Solana program for privacy-focused token drops",
   "scripts": {

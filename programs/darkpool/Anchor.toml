@@ -3,13 +3,13 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-darkdrop = "2pdQQB9pMDbM7VFYPwwFs2gPC1GMsHwYHavg6Dzh33K4"
+darkpool = "2pdQQB9pMDbM7VFYPwwFs2gPC1GMsHwYHavg6Dzh33K4"
 
 [programs.devnet]
-darkdrop = "2pdQQB9pMDbM7VFYPwwFs2gPC1GMsHwYHavg6Dzh33K4"
+darkpool = "2pdQQB9pMDbM7VFYPwwFs2gPC1GMsHwYHavg6Dzh33K4"
 
 [programs.mainnet]
-darkdrop = "2pdQQB9pMDbM7VFYPwwFs2gPC1GMsHwYHavg6Dzh33K4"
+darkpool = "2pdQQB9pMDbM7VFYPwwFs2gPC1GMsHwYHavg6Dzh33K4"
 
 [registry]
 url = "https://api.apr.dev"

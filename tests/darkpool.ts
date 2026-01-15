@@ -1,6 +1,6 @@
 import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
-import { Darkdrop } from "../target/types/darkdrop";
+import { Darkpool } from "../target/types/darkpool";
 import { PublicKey, Keypair, SystemProgram } from "@solana/web3.js";
 import { expect } from "chai";
 import { BN } from "@coral-xyz/anchor";
@@ -12,16 +12,18 @@ declare global {
   }
 }
 
-describe("darkdrop", () => {
+describe("darkpool", () => {
   const provider = anchor.AnchorProvider.env();
   anchor.setProvider(provider);
 
-  const program = anchor.workspace.Darkdrop as Program<Darkdrop>;
+  const program = anchor.workspace.Darkpool as Program<Darkpool>;
   const authority = provider.wallet;
   const recipient = Keypair.generate();
   const claimer = Keypair.generate();
+  const treasury = Keypair.generate();
 
   let configPDA: PublicKey;
+  let solVaultPDA: PublicKey;
   let nullifier: Uint8Array;
   let dropPDA: PublicKey;
   let nullifierPDA: PublicKey;
@@ -42,6 +44,10 @@ describe("darkdrop", () => {
       [Buffer.from("config")],
       program.programId
     );
+    [solVaultPDA] = PublicKey.findProgramAddressSync(
+      [Buffer.from("sol_vault")],
+      program.programId
+    );
 
     [dropPDA] = PublicKey.findProgramAddressSync(
       [Buffer.from("drop"), Buffer.from(nullifier)],
@@ -56,10 +62,11 @@ describe("darkdrop", () => {
 
   it("Initializes the program", async () => {
     const tx = await program.methods
-      .initialize()
+      .initialize(treasury.publicKey, 0)
       .accounts({
         config: configPDA,
         authority: authority.publicKey,
+        solVault: solVaultPDA,
         systemProgram: SystemProgram.programId,
       })
       .rpc();
@@ -69,7 +76,7 @@ describe("darkdrop", () => {
     expect(config.isInitialized).to.be.true;
   });
 
-  it("Creates a drop", async () => {
+  it("Deposits to pool (SOL)", async () => {
     const clock = await provider.connection.getSlot();
     const blockTime = await provider.connection.getBlockTime(clock);
     const expiresAt = new BN(blockTime! + 3600); // 1 hour from now
@@ -80,9 +87,8 @@ describe("darkdrop", () => {
     );
 
     const tx = await program.methods
-      .createDrop(
+      .depositPool(
         Array.from(nullifier),
-        recipient.publicKey,
         new BN(1000000), // 0.001 SOL (in lamports)
         0, // SOL
         expiresAt
@@ -93,25 +99,29 @@ describe("darkdrop", () => {
         config: configPDA,
         rateLimitAccount: rateLimitPDA,
         payer: authority.publicKey,
+        solVault: solVaultPDA,
         systemProgram: SystemProgram.programId,
       })
       .rpc();
 
     const drop = await program.account.dropAccount.fetch(dropPDA);
     expect(drop.nullifier).to.deep.equal(Array.from(nullifier));
-    expect(drop.recipient.toString()).to.equal(recipient.publicKey.toString());
+    expect(drop.recipient.toString()).to.equal(authority.publicKey.toString());
     expect(drop.amount.toNumber()).to.equal(1000000);
     expect(drop.status.active).to.not.be.undefined;
   });
 
-  it("Prevents double claim", async () => {
-    // First claim should succeed
+  it("Claims a pool drop and prevents double-claim", async () => {
     await program.methods
       .claimDrop(Array.from(nullifier))
       .accounts({
         drop: dropPDA,
         nullifierAccount: nullifierPDA,
         claimer: claimer.publicKey,
+        config: configPDA,
+        solVault: solVaultPDA,
+        treasury: treasury.publicKey,
+        systemProgram: SystemProgram.programId,
       })
       .signers([claimer])
       .rpc();
@@ -124,6 +134,10 @@ describe("darkdrop", () => {
           drop: dropPDA,
           nullifierAccount: nullifierPDA,
           claimer: claimer.publicKey,
+          config: configPDA,
+          solVault: solVaultPDA,
+          treasury: treasury.publicKey,
+          systemProgram: SystemProgram.programId,
         })
         .signers([claimer])
         .rpc();
@@ -158,9 +172,8 @@ describe("darkdrop", () => {
 
     try {
       await program.methods
-        .createDrop(
+        .depositPool(
           Array.from(invalidNullifier),
-          recipient.publicKey,
           new BN(0), // Invalid: amount must be > 0
           0,
           expiresAt
@@ -171,6 +184,7 @@ describe("darkdrop", () => {
           config: configPDA,
           rateLimitAccount: rateLimitPDA,
           payer: authority.publicKey,
+          solVault: solVaultPDA,
           systemProgram: SystemProgram.programId,
         })
         .rpc();
@@ -205,9 +219,8 @@ describe("darkdrop", () => {
 
     // First drop should succeed
     await program.methods
-      .createDrop(
+      .depositPool(
         Array.from(testNullifier),
-        recipient.publicKey,
         new BN(1000000),
         0,
         expiresAt
@@ -218,6 +231,7 @@ describe("darkdrop", () => {
         config: configPDA,
         rateLimitAccount: rateLimitPDA,
         payer: authority.publicKey,
+        solVault: solVaultPDA,
         systemProgram: SystemProgram.programId,
       })
       .rpc();
@@ -238,9 +252,8 @@ describe("darkdrop", () => {
 
     try {
       await program.methods
-        .createDrop(
+        .depositPool(
           Array.from(testNullifier2),
-          recipient.publicKey,
           new BN(1000000),
           0,
           expiresAt
@@ -251,6 +264,7 @@ describe("darkdrop", () => {
           config: configPDA,
           rateLimitAccount: rateLimitPDA,
           payer: authority.publicKey,
+          solVault: solVaultPDA,
           systemProgram: SystemProgram.programId,
         })
         .rpc();

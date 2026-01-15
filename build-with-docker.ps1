@@ -18,7 +18,7 @@ Write-Host "Docker is running" -ForegroundColor Green
 
 # Force rebuild to pick up Dockerfile changes
 Write-Host "`nBuilding Docker image (this may take a while)..." -ForegroundColor Yellow
-docker build --no-cache -t darkdrop-builder -f Dockerfile .
+docker build --no-cache -t darkpool-builder -f Dockerfile .
 
 if ($LASTEXITCODE -ne 0) {
     Write-Host "`nError: Docker image build failed" -ForegroundColor Red
@@ -32,8 +32,8 @@ Write-Host "`nBuilding program..." -ForegroundColor Yellow
 docker run --rm `
     -v "${PWD}:/workspace" `
     -w /workspace `
-    darkdrop-builder `
-    bash -c "anchor build && echo 'Build artifacts location:' && ls -lh target/deploy/darkdrop.so 2>/dev/null || echo 'Binary not found in expected location'"
+    darkpool-builder `
+    bash -c "anchor build && echo 'Build artifacts location:' && ls -lh target/deploy/darkpool.so 2>/dev/null || echo 'Binary not found in expected location'"
 
 if ($LASTEXITCODE -eq 0) {
     Write-Host "`nBuild successful!" -ForegroundColor Green
