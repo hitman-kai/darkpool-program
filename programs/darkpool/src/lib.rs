@@ -13,7 +13,7 @@ const MAX_AUTHORITY_DELAY_SECONDS: i64 = 7 * 24 * 60 * 60; // 7 days
 const DEFAULT_AUTHORITY_DELAY_SECONDS: i64 = 24 * 60 * 60; // 24 hours
 const MAX_FEE_BPS: u16 = 1000; // 10%
 
-declare_id!("95XwPFvP6znDJN2XS4JRp29NjUNGEKDAmCRfKaZEzNfw");
+declare_id!("EPpgM9ogD8wTVESMmin8kwemTmkVPQhPq9w1Mpz8Gxb7");
 
 #[program]
 pub mod darkpool {
@@ -626,13 +626,16 @@ pub mod darkpool {
             ErrorCode::ConstraintOwner
         );
 
-        let mut drop_data_slice: &[u8] = &drop_info.try_borrow_data()?;
-        let mut drop_state = DropAccount::try_deserialize(&mut drop_data_slice)?;
+        let mut drop_state = {
+            let drop_data = drop_info.try_borrow_data()?;
+            DropAccount::try_deserialize(&mut &drop_data[..])?
+        };
         require_eq!(drop_state.bump, drop_bump, ErrorCode::ConstraintSeeds);
 
-        let mut nullifier_data_slice: &[u8] = &nullifier_info.try_borrow_data()?;
-        let mut nullifier_state =
-            NullifierAccount::try_deserialize(&mut nullifier_data_slice)?;
+        let mut nullifier_state = {
+            let nullifier_data = nullifier_info.try_borrow_data()?;
+            NullifierAccount::try_deserialize(&mut &nullifier_data[..])?
+        };
         require_eq!(
             nullifier_state.bump,
             nullifier_bump,
@@ -936,12 +939,16 @@ pub mod darkpool {
             ErrorCode::ConstraintOwner
         );
 
-        let mut drop_data_slice: &[u8] = &drop_info.try_borrow_data()?;
-        let drop_state = DropAccount::try_deserialize(&mut drop_data_slice)?;
+        let drop_state = {
+            let drop_data = drop_info.try_borrow_data()?;
+            DropAccount::try_deserialize(&mut &drop_data[..])?
+        };
         require_eq!(drop_state.bump, drop_bump, ErrorCode::ConstraintSeeds);
 
-        let mut nullifier_data_slice: &[u8] = &nullifier_info.try_borrow_data()?;
-        let nullifier_state = NullifierAccount::try_deserialize(&mut nullifier_data_slice)?;
+        let nullifier_state = {
+            let nullifier_data = nullifier_info.try_borrow_data()?;
+            NullifierAccount::try_deserialize(&mut &nullifier_data[..])?
+        };
         require_eq!(
             nullifier_state.bump,
             nullifier_bump,
