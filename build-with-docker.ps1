@@ -3,6 +3,9 @@
 
 Write-Host "Building DarkDrop program with Docker..." -ForegroundColor Cyan
 
+# Resolve script directory so relative paths work from any cwd
+$scriptRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
+
 # Check if Docker is running
 $dockerRunning = docker ps 2>&1
 if ($LASTEXITCODE -ne 0) {
@@ -18,7 +21,7 @@ Write-Host "Docker is running" -ForegroundColor Green
 
 # Force rebuild to pick up Dockerfile changes
 Write-Host "`nBuilding Docker image (this may take a while)..." -ForegroundColor Yellow
-docker build --no-cache -t darkpool-builder -f Dockerfile .
+docker build --no-cache -t darkpool-builder -f (Join-Path $scriptRoot "Dockerfile") $scriptRoot
 
 if ($LASTEXITCODE -ne 0) {
     Write-Host "`nError: Docker image build failed" -ForegroundColor Red
@@ -30,10 +33,10 @@ Write-Host "`nBuilding program..." -ForegroundColor Yellow
 
 # Run build in container
 docker run --rm `
-    -v "${PWD}:/workspace" `
+    -v "${scriptRoot}:/workspace" `
     -w /workspace `
     darkpool-builder `
-    bash -c "anchor build && echo 'Build artifacts location:' && ls -lh target/deploy/darkpool.so 2>/dev/null || echo 'Binary not found in expected location'"
+    bash -c "rm -f Cargo.lock programs/darkpool/Cargo.lock && cd programs/darkpool && cargo generate-lockfile && cargo update -p blake3 --precise 1.5.0 && cd /workspace && cargo build-sbf --manifest-path programs/darkpool/Cargo.toml --sbf-out-dir target/deploy && echo 'Build artifacts location:' && ls -lh target/deploy/darkpool.so 2>/dev/null || echo 'Binary not found in expected location'"
 
 if ($LASTEXITCODE -eq 0) {
     Write-Host "`nBuild successful!" -ForegroundColor Green

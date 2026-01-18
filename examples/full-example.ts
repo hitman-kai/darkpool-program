@@ -40,7 +40,7 @@ async function main() {
 
   // Replace with your program ID
   const programId = new PublicKey(
-    "95XwPFvP6znDJN2XS4JRp29NjUNGEKDAmCRfKaZEzNfw"
+    "EPpgM9ogD8wTVESMmin8kwemTmkVPQhPq9w1Mpz8Gxb7"
   );
   const program = await anchor.Program.at(programId, provider);
 

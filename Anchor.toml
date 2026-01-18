@@ -9,7 +9,7 @@ skip-lint = false
 darkpool = "2pdQQB9pMDbM7VFYPwwFs2gPC1GMsHwYHavg6Dzh33K4"
 
 [programs.devnet]
-darkpool = "95XwPFvP6znDJN2XS4JRp29NjUNGEKDAmCRfKaZEzNfw"
+darkpool = "EPpgM9ogD8wTVESMmin8kwemTmkVPQhPq9w1Mpz8Gxb7"
 
 [programs.mainnet]
 darkpool = "2pdQQB9pMDbM7VFYPwwFs2gPC1GMsHwYHavg6Dzh33K4"

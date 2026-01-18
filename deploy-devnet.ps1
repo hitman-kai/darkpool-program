@@ -4,6 +4,9 @@
 
 Write-Host "Deploying DarkDrop program to devnet..." -ForegroundColor Cyan
 
+# Resolve script directory so relative paths work from any cwd
+$scriptRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
+
 # Check if Docker is running
 $dockerRunning = docker ps 2>&1
 if ($LASTEXITCODE -ne 0) {
@@ -14,9 +17,9 @@ if ($LASTEXITCODE -ne 0) {
 Write-Host "Docker is running" -ForegroundColor Green
 
 # Check if program is built
-if (-not (Test-Path "target/deploy/darkpool.so")) {
+if (-not (Test-Path (Join-Path $scriptRoot "target/deploy/darkpool.so"))) {
     Write-Host "`nWarning: Program not built yet. Building first..." -ForegroundColor Yellow
-    .\build-with-docker.ps1
+    & (Join-Path $scriptRoot "build-with-docker.ps1")
     if ($LASTEXITCODE -ne 0) {
         Write-Host "`nError: Build failed. Cannot deploy." -ForegroundColor Red
         exit 1
@@ -31,7 +34,7 @@ if (-not $keypairPath) {
     # Default to Solana CLI default location
     $solanaConfig = solana config get 2>&1 | Select-String "Keypair Path"
     if ($solanaConfig) {
-        $keypairPath = ($solanaConfig -split ":")[1].Trim()
+        $keypairPath = ($solanaConfig.ToString() -replace ".*Keypair Path:\s*", "").Trim()
     } else {
         Write-Host "`nError: Keypair path not found" -ForegroundColor Red
         Write-Host "Set KEYPAIR_PATH environment variable or configure Solana CLI" -ForegroundColor Yellow
@@ -56,13 +59,14 @@ Write-Host "Get free SOL: solana airdrop 2 --url devnet" -ForegroundColor Gray
 # Get the directory and filename of the keypair
 $keypairDir = Split-Path -Parent $keypairPath
 $keypairFile = Split-Path -Leaf $keypairPath
+$workspace = Resolve-Path $scriptRoot
 
 docker run --rm `
-    -v "${PWD}:/workspace" `
+    -v "${workspace}:/workspace" `
     -v "${keypairDir}:/keys" `
     -w /workspace `
     darkpool-builder `
-    bash -c "solana config set --url devnet && solana config set --keypair /keys/$keypairFile && anchor deploy --provider.cluster devnet --provider.wallet /keys/$keypairFile"
+    bash -c "solana config set --url devnet && solana config set --keypair /keys/$keypairFile && solana program deploy /workspace/target/deploy/darkpool.so --program-id /workspace/target/deploy/darkpool-keypair.json --use-rpc --max-sign-attempts 10"
 
 if ($LASTEXITCODE -eq 0) {
     Write-Host "`nDeployment successful!" -ForegroundColor Green

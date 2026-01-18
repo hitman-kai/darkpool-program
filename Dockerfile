@@ -31,14 +31,11 @@ RUN mkdir -p /root/.cargo/bin && \
     echo 'exec cargo-build-sbf "$@"' >> /root/.cargo/bin/cargo-build-bpf && \
     chmod +x /root/.cargo/bin/cargo-build-bpf
 
-# Install Rust 1.76.0 (compatible with both Solana and newer dependencies)
-RUN rustup toolchain install 1.76.0 && rustup default 1.76.0
+# Install nightly Rust (needed for crates with edition2024)
+RUN rustup toolchain install nightly && rustup default nightly
 
 # Verify cargo is available and version
 RUN cargo --version && rustc --version
-
-# Install Anchor 0.29.0 with --locked (required version for our project)
-RUN cargo install --git https://github.com/coral-xyz/anchor --tag v0.29.0 anchor-cli --locked
 
 # Set working directory
 WORKDIR /workspace
@@ -47,5 +44,5 @@ WORKDIR /workspace
 COPY . .
 
 # Build command (will be overridden)
-CMD ["anchor", "build"]
+CMD ["cargo", "build-sbf"]
 
